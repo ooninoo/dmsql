@@ -17,8 +17,11 @@ import (
 	"time"
 
 	dm "dm"
+
 	"golang.org/x/term"
 )
+
+var commitID = "unknown"
 
 const help = `dmsql — 达梦 SQL 命令行
 用法: dmsql [-h host] [-p port] [-U user] [-d schema] [-W] [-c SQL | -f file]
@@ -64,6 +67,7 @@ func run(args []string, in *os.File, out, errOut io.Writer) int {
 	passwordPrompt := flags.Bool("W", false, "提示输入密码")
 	timeout := flags.Duration("timeout", 0, "每条 SQL 超时（例如 30s，0 为不限）")
 	showHelp := flags.Bool("help", false, "帮助")
+	showVersion := flags.Bool("version", false, "显示版本")
 	var commands actions
 	flags.Func("c", "执行一条 SQL（可重复）", commands.add("sql"))
 	flags.Func("f", "执行 SQL 文件，- 表示标准输入（可重复）", commands.add("file"))
@@ -73,6 +77,10 @@ func run(args []string, in *os.File, out, errOut io.Writer) int {
 	}
 	if *showHelp {
 		fmt.Fprint(out, help)
+		return 0
+	}
+	if *showVersion {
+		fmt.Fprintln(out, "dmsql commit", commitID)
 		return 0
 	}
 	if flags.NArg() != 0 || *timeout < 0 {
